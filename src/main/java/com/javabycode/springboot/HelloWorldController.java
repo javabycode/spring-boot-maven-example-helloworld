@@ -14,6 +14,6 @@ public class HelloWorldController {
         model.addAttribute("name", name);
         model.addAttribute("message", message);
         
-        return "Testing Github webhook 123...";
+        return "Testing Github webhook 123... But ofcourse it aint working...";
     }
 }
