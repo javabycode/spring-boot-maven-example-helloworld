@@ -80,5 +80,5 @@ class LoadBalancerStack extends cdk.Stack {
 }
 
 const app = new cdk.App();
-new LoadBalancerStack(app, 'app');
+new LoadBalancerStack(app, 'example');
 app.synth();
