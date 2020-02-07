@@ -1,4 +1,6 @@
 {
+  "name": "example",
+  "version": "1.0.0",
   "description": "cdk quick start",
   "devDependencies": {
     "@aws-cdk/aws-ecs": "^1.21.0",
