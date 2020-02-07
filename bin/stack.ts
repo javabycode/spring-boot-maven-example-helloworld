@@ -43,7 +43,7 @@ export class ApplicationStack extends cdk.Stack {
                 region: '',
                 service: 'iam',
                 resource: 'role',
-                resourceName: `${props.name}-instance-role`, // convention
+                resourceName: `${props.name}-instance-role-${props.stage}`, // convention
                 //sep: ':'
             }, this))
         });
