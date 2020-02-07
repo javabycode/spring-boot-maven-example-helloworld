@@ -84,6 +84,13 @@ export class ApplicationStack extends cdk.Stack {
             autoScalingGroups: [asg],
             installAgent: true,
             deploymentConfig: ServerDeploymentConfig.ALL_AT_ONCE,
+            role: Role.fromRoleArn(this, 'deploy-role', Arn.format({
+                region: '',
+                service: 'iam',
+                resource: 'role',
+                resourceName: `${props.name}-deploy-role-${props.stage}`, // convention
+                //sep: ':'
+            }, this))
         });
     }
 }
