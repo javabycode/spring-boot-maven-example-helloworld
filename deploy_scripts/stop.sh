@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DEPLOYMENT_DIR=/opt/SpringBootMavenExample
+DEPLOYMENT_DIR=/opt/example
 cd ${DEPLOYMENT_DIR}
 
 if [[ -f pid.file ]]

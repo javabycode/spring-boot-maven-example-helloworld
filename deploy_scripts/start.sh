@@ -1,7 +1,7 @@
 #!/bin/bash
 
-DEPLOYMENT_DIR=/opt/SpringBootMavenExample
+DEPLOYMENT_DIR=/opt/example
 cd ${DEPLOYMENT_DIR}
 
-nohup ./SpringBootMavenExample.jar > app.log 2>&1 &
+nohup ./example.jar > app.log 2>&1 &
 echo $! > pid.file
