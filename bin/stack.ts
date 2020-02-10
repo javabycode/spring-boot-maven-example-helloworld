@@ -37,7 +37,7 @@ export class ApplicationStack extends cdk.Stack {
             'sudo amazon-linux-extras install java-openjdk11'
         );
 
-        const imageId = StringParameter.fromStringParameterName(this,  'ImageId', `/app/${props.name}/ami_id`);
+        const imageId = StringParameter.fromStringParameterName(this,  'ImageId', `/app/${props.name}/ami_id:${props.stage}`);
         const base = new ec2.GenericLinuxImage({
             [`${Stack.of(this).region}`]: imageId.stringValue
         });
