@@ -2,12 +2,11 @@ import cdk = require('@aws-cdk/core');
 import ec2 = require('@aws-cdk/aws-ec2');
 import autoscaling = require('@aws-cdk/aws-autoscaling');
 import elbv2 = require('@aws-cdk/aws-elasticloadbalancingv2');
-import {LookupMachineImage, Peer, Port, SubnetType, UserData} from "@aws-cdk/aws-ec2";
+import {Peer, Port, SubnetType, UserData} from "@aws-cdk/aws-ec2";
 import {UpdateType} from "@aws-cdk/aws-autoscaling";
 import {Role} from "@aws-cdk/aws-iam";
-import {Arn, Stack} from "@aws-cdk/core";
+import {Arn, CfnOutput, Stack} from "@aws-cdk/core";
 import {ServerApplication, ServerDeploymentConfig, ServerDeploymentGroup} from "@aws-cdk/aws-codedeploy";
-import base from "@mintdevops/odyssey/lib/commands/base";
 import {StringParameter} from "@aws-cdk/aws-ssm";
 
 export enum Stages {
@@ -28,8 +27,6 @@ export class ApplicationStack extends cdk.Stack {
         super(app, props.name, {...props, stackName: `${props.name}-${props.stage}`});
 
         const root = app.node.root.node
-
-        const baseAmi = root.tryGetContext('baseAmi');
 
         const vpc = new ec2.Vpc(this, 'VPC');
 
@@ -77,6 +74,12 @@ export class ApplicationStack extends cdk.Stack {
 
         const listener = lb.addListener('Listener', {
             port: 80,
+        });
+
+        new CfnOutput(this, 'LoadBalancerDNS', {
+            description: 'The load balancer DNS',
+            exportName: 'LoadBalanceDNS',
+            value: lb.loadBalancerDnsName
         });
 
         listener.addTargets('Target', {
