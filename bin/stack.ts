@@ -78,7 +78,7 @@ export class ApplicationStack extends cdk.Stack {
 
         new CfnOutput(this, 'LoadBalancerDNS', {
             description: 'The load balancer DNS',
-            exportName: 'LoadBalanceDNS',
+            exportName: `${props.stage}-LoadBalanceDNS`,
             value: lb.loadBalancerDnsName
         });
 
