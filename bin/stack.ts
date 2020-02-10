@@ -16,6 +16,8 @@ export enum Stages {
     PROD = "PROD"
 }
 
+const StageOrder = [Stages.DEV, Stages.TEST, Stages.PROD]
+
 export interface AppProps extends cdk.StackProps{
     name: string,
     stage: Stages,
@@ -37,9 +39,11 @@ export class ApplicationStack extends cdk.Stack {
             'sudo amazon-linux-extras install java-openjdk11'
         );
 
-        const imageId = StringParameter.fromStringParameterName(this,  'ImageId', `/app/${props.name}/ami_id:${props.stage}`);
+        // cloudformation doesnt support labels yet so need a separate parameter per stage
+        const imageId = StringParameter.valueForStringParameter(
+            this, `/app/${props.name}/${props.stage}/ami_id`);
         const base = new ec2.GenericLinuxImage({
-            [`${Stack.of(this).region}`]: imageId.stringValue
+            [`${Stack.of(this).region}`]: imageId
         });
 
         const asg = new autoscaling.AutoScalingGroup(this, 'ASG', {
