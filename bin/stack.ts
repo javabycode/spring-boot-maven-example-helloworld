@@ -2,11 +2,13 @@ import cdk = require('@aws-cdk/core');
 import ec2 = require('@aws-cdk/aws-ec2');
 import autoscaling = require('@aws-cdk/aws-autoscaling');
 import elbv2 = require('@aws-cdk/aws-elasticloadbalancingv2');
-import {Peer, Port, SubnetType, UserData} from "@aws-cdk/aws-ec2";
+import {LookupMachineImage, Peer, Port, SubnetType, UserData} from "@aws-cdk/aws-ec2";
 import {UpdateType} from "@aws-cdk/aws-autoscaling";
 import {Role} from "@aws-cdk/aws-iam";
-import {Arn} from "@aws-cdk/core";
+import {Arn, Stack} from "@aws-cdk/core";
 import {ServerApplication, ServerDeploymentConfig, ServerDeploymentGroup} from "@aws-cdk/aws-codedeploy";
+import base from "@mintdevops/odyssey/lib/commands/base";
+import {StringParameter} from "@aws-cdk/aws-ssm";
 
 export enum Stages {
     DEV = "DEV",
@@ -14,14 +16,18 @@ export enum Stages {
     PROD = "PROD"
 }
 
-export interface AppProps {
+export interface AppProps extends cdk.StackProps{
     name: string,
     stage: Stages,
 }
 
 export class ApplicationStack extends cdk.Stack {
     constructor(app: cdk.App, props: AppProps) {
-        super(app, props.name, {stackName: `${props.name}-${props.stage}`});
+        super(app, props.name, {...props, stackName: `${props.name}-${props.stage}`});
+
+        const root = app.node.root.node
+
+        const baseAmi = root.tryGetContext('baseAmi');
 
         const vpc = new ec2.Vpc(this, 'VPC');
 
@@ -31,10 +37,15 @@ export class ApplicationStack extends cdk.Stack {
             'sudo amazon-linux-extras install java-openjdk11'
         );
 
+        const imageId = StringParameter.fromStringParameterName(this,  'ImageId', `/app/${props.name}/ami_id`);
+        const base = new ec2.GenericLinuxImage({
+            [`${Stack.of(this).region}`]: imageId.stringValue
+        });
+
         const asg = new autoscaling.AutoScalingGroup(this, 'ASG', {
             vpc,
             instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
-            machineImage: new ec2.AmazonLinuxImage(),
+            machineImage: base,
             userData,
             keyName: 'test',
             updateType: UpdateType.REPLACING_UPDATE,

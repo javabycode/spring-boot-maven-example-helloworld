@@ -16,5 +16,8 @@ const stage = root.node.tryGetContext('stage') || Stages.DEV;
  */
 new ApplicationStack(root,  {
     name: 'example',
-    stage: <Stages>stage
+    stage: <Stages>stage,
+    env: {
+        region: process.env.CDK_DEFAULT_REGION
+    }
 });
