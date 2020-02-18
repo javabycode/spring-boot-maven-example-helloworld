@@ -36,8 +36,6 @@
     "@aws-cdk/aws-logs": "^1.21.0",
     "@aws-cdk/aws-rds": "^1.21.0",
     "@aws-cdk/aws-ssm": "^1.21.0",
-    "cdk-watchful": "^0.3.0",
-    "install": "^0.13.0",
-    "jira-changelog": "^1.5.0"
+    "cdk-watchful": "^0.3.0"
   }
 }

@@ -4,7 +4,7 @@ import autoscaling = require('@aws-cdk/aws-autoscaling');
 import elbv2 = require('@aws-cdk/aws-elasticloadbalancingv2');
 import {Peer, Port, SubnetType, UserData} from "@aws-cdk/aws-ec2";
 import {UpdateType} from "@aws-cdk/aws-autoscaling";
-import {Role} from "@aws-cdk/aws-iam";
+import {AccountPrincipal, Role} from "@aws-cdk/aws-iam";
 import {Arn, CfnOutput, Stack} from "@aws-cdk/core";
 import {ServerApplication, ServerDeploymentConfig, ServerDeploymentGroup} from "@aws-cdk/aws-codedeploy";
 import {StringParameter} from "@aws-cdk/aws-ssm";
@@ -14,8 +14,6 @@ export enum Stages {
     TEST = "TEST",
     PROD = "PROD"
 }
-
-const StageOrder = [Stages.DEV, Stages.TEST, Stages.PROD]
 
 export interface AppProps extends cdk.StackProps{
     name: string,
@@ -95,13 +93,25 @@ export class ApplicationStack extends cdk.Stack {
 
         const application = ServerApplication.fromServerApplicationName(this, 'DeployContext', props.name); // created by pipeline
 
+        const deploymentRole = new Role(this, 'DeployRole', {
+            roleName: `${props.stage}-deploy-role`,
+            assumedBy: new AccountPrincipal(this.account)
+        })
+
         // used by pipeline (asgs dont exist when pipeline is created)
-        new ServerDeploymentGroup(this, 'DeployTarget', {
+        const dg = new ServerDeploymentGroup(this, 'DeployTarget', {
             application,
             deploymentGroupName: props.stage,
             autoScalingGroups: [asg],
             installAgent: true,
-            deploymentConfig: ServerDeploymentConfig.ALL_AT_ONCE
+            deploymentConfig: ServerDeploymentConfig.ALL_AT_ONCE,
+            role: Role.fromRoleArn(this, 'deploy-role', Arn.format({
+                region: '',
+                service: 'iam',
+                resource: 'role',
+                resourceName: `${props.name}-deploy-role-${props.stage}`, // convention
+                //sep: ':'
+            }, this))
         });
     }
 }
