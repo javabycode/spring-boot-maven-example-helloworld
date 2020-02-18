@@ -53,7 +53,7 @@ export class ApplicationStack extends cdk.Stack {
                 region: '',
                 service: 'iam',
                 resource: 'role',
-                resourceName: `${props.name}-instance-role-${props.stage}`, // convention
+                resourceName: `${props.name}-instance-role-${props.stage.toLowerCase()}`, // convention
                 //sep: ':'
             }, this))
         });
@@ -93,11 +93,6 @@ export class ApplicationStack extends cdk.Stack {
 
         const application = ServerApplication.fromServerApplicationName(this, 'DeployContext', props.name); // created by pipeline
 
-        const deploymentRole = new Role(this, 'DeployRole', {
-            roleName: `${props.stage}-deploy-role`,
-            assumedBy: new AccountPrincipal(this.account)
-        })
-
         // used by pipeline (asgs dont exist when pipeline is created)
         const dg = new ServerDeploymentGroup(this, 'DeployTarget', {
             application,
@@ -109,7 +104,7 @@ export class ApplicationStack extends cdk.Stack {
                 region: '',
                 service: 'iam',
                 resource: 'role',
-                resourceName: `${props.name}-deploy-role-${props.stage}`, // convention
+                resourceName: `${props.name}-deploy-role-${props.stage.toLowerCase()}`, // convention
                 //sep: ':'
             }, this))
         });
