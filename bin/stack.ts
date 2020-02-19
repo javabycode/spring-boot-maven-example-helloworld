@@ -4,7 +4,7 @@ import autoscaling = require('@aws-cdk/aws-autoscaling');
 import elbv2 = require('@aws-cdk/aws-elasticloadbalancingv2');
 import {Peer, Port, SubnetType, UserData} from "@aws-cdk/aws-ec2";
 import {UpdateType} from "@aws-cdk/aws-autoscaling";
-import {AccountPrincipal, Role} from "@aws-cdk/aws-iam";
+import {AccountPrincipal, Role, ServicePrincipal} from "@aws-cdk/aws-iam";
 import {Arn, CfnOutput, Stack} from "@aws-cdk/core";
 import {ServerApplication, ServerDeploymentConfig, ServerDeploymentGroup} from "@aws-cdk/aws-codedeploy";
 import {StringParameter} from "@aws-cdk/aws-ssm";
@@ -41,6 +41,25 @@ export class ApplicationStack extends cdk.Stack {
             [`${Stack.of(this).region}`]: imageId
         });
 
+        // for non production environments we use our pipeline role which supports codedeploy
+        // for production environments we use the application role
+        let instanceRole;
+        if (props.stage !== Stages.PROD) {
+            instanceRole = Role.fromRoleArn(this, 'instance-role', Arn.format({
+                region: '',
+                service: 'iam',
+                resource: 'role',
+                resourceName: `${props.name}-instance-role-${props.stage.toLowerCase()}`, // convention
+                //sep: ':'
+            }, this))
+        }
+        else {
+            instanceRole = new Role(this, 'instance-role', {
+                roleName: `${props.name}-instance-role-${props.stage.toLowerCase()}`,
+                assumedBy: new ServicePrincipal('ec2.amazonaws.com')
+            })
+        }
+
         const asg = new autoscaling.AutoScalingGroup(this, 'ASG', {
             vpc,
             instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
@@ -49,13 +68,7 @@ export class ApplicationStack extends cdk.Stack {
             keyName: 'test',
             updateType: UpdateType.REPLACING_UPDATE,
             vpcSubnets: vpc.selectSubnets({subnetType: SubnetType.PUBLIC}),
-            role: Role.fromRoleArn(this, 'instance-role', Arn.format({
-                region: '',
-                service: 'iam',
-                resource: 'role',
-                resourceName: `${props.name}-instance-role-${props.stage.toLowerCase()}`, // convention
-                //sep: ':'
-            }, this))
+            role: instanceRole
         });
 
         const [defaultSg] = asg.connections.securityGroups;
@@ -93,20 +106,24 @@ export class ApplicationStack extends cdk.Stack {
 
         const application = ServerApplication.fromServerApplicationName(this, 'DeployContext', props.name); // created by pipeline
 
-        // used by pipeline (asgs dont exist when pipeline is created)
-        const dg = new ServerDeploymentGroup(this, 'DeployTarget', {
-            application,
-            deploymentGroupName: props.stage,
-            autoScalingGroups: [asg],
-            installAgent: true,
-            deploymentConfig: ServerDeploymentConfig.ALL_AT_ONCE,
-            role: Role.fromRoleArn(this, 'deploy-role', Arn.format({
-                region: '',
-                service: 'iam',
-                resource: 'role',
-                resourceName: `${props.name}-deploy-role-${props.stage.toLowerCase()}`, // convention
-                //sep: ':'
-            }, this))
-        });
+        // only create a deployment group for non-production environments
+        // production environments are immutable servers and do not need deployments
+        if (props.stage !== Stages.PROD) {
+            // used by pipeline (asgs dont exist when pipeline is created)
+            const dg = new ServerDeploymentGroup(this, 'DeployTarget', {
+                application,
+                deploymentGroupName: props.stage,
+                autoScalingGroups: [asg],
+                installAgent: true,
+                deploymentConfig: ServerDeploymentConfig.ALL_AT_ONCE,
+                role: Role.fromRoleArn(this, 'deploy-role', Arn.format({
+                    region: '',
+                    service: 'iam',
+                    resource: 'role',
+                    resourceName: `${props.name}-deploy-role-${props.stage.toLowerCase()}`, // convention
+                    //sep: ':'
+                }, this))
+            });
+        }
     }
 }
