@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 jobs:
   build:
@@ -28,7 +28,7 @@ jobs:
           path: target/surefire-reports
 
 workflows:
-  version: 2
+  version: 2.1
   maven_test:
     jobs:
       - build
@@ -36,7 +36,7 @@ workflows:
           type: approval
           requires:
             - build
-      - test
+      - test:
           requires:
             - hold
 
