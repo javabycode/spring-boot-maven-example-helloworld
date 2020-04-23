@@ -14,7 +14,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: maven-{{ checksum "/tmp/maven_cache_seed" }}
+          key: v1-dependencies-{{ checksum "./pom.xml" }}
   test:
     docker:
       - image: circleci/openjdk:8-jdk-node
