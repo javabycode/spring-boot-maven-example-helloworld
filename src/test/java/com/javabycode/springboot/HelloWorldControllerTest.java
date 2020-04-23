@@ -1,6 +1,7 @@
 package com.javabycode.springboot;
 
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.ui.Model;
 
@@ -18,6 +19,11 @@ public class HelloWorldControllerTest {
         helloWorldController.hello(modelMock, name);
 
         verify(modelMock).addAttribute("name", name);
+    }
+
+    @Test
+    public void failingTest() {
+        Assert.fail();
     }
 
 }
