@@ -37,7 +37,7 @@ jobs:
       - run:
           name: Build Artifact
           command: mvn package
-      -run:
+      - run:
           name: Prepare artifacts folder
           command: mkdir /tmp/artifacts
       - store_artifacts:
