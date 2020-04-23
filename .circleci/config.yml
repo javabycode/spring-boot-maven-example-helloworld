@@ -19,6 +19,7 @@ jobs:
     docker:
       - image: circleci/openjdk:8-jdk-node
     steps:
+      - checkout
       - restore_cache:
           key: v1-dependencies-{{ checksum "./pom.xml" }}
       - run:
