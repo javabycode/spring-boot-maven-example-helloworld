@@ -2,6 +2,7 @@ package com.javabycode.springboot;
 
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.ui.Model;
 
@@ -23,6 +24,12 @@ public class HelloWorldControllerTest {
 
     @Test
     public void failingTest() {
+        Assert.fail();
+    }
+
+    @Test
+    @Ignore
+    public void ignoredTest() {
         Assert.fail();
     }
 
