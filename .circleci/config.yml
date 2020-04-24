@@ -53,7 +53,7 @@ jobs:
     steps:
       - aws-cli/install
       - aws-cli/setup:
-          aws-region: eu-west-1
+          aws-region: AWS_REGION
       - run: aws --version
       - run: aws ec2 describe-instances
 
@@ -70,6 +70,7 @@ workflows:
           requires:
             - test
       - deploy_test:
+          context: aws
           requires:
             - hold
 
