@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   aws-cli: circleci/aws-cli@1.0.0
+  jq: circleci/jq@2.0.1
 
 executors:
   utility:
@@ -14,8 +15,10 @@ commands:
     description: "Generate parameters for the DeployWildflyDomainMode SSM document"
     parameters:
       apiToken:
-        type: string
+        type: env_var_name
+        default: ARTIFACTORY_API_TOKEN
     steps:
+      - jq/install
       - run: mkdir -p workspace
       - run:
           name: Generate Command Parameters
@@ -32,7 +35,7 @@ commands:
                 "org.primefaces.primefaces"
               ],
               "artifactRepoAuthHeader": [
-                "X-JFrog-Art-Api: << parameters.apiToken >>"
+                "X-JFrog-Art-Api: $<< parameters.apiToken >>"
               ],
               "artifactRepoUrl": [
                 "mytutor.jfrog.io/artifactory/libs-release-local"
@@ -79,7 +82,7 @@ commands:
             }
             END_HEREDOC
             )
-            echo "$COMMAND_PARAMETERS" > /tmp/workspace/deploy.json
+      - run: echo "$COMMAND_PARAMETERS" | jq -c > /tmp/workspace/deploy.json
       - persist_to_workspace:
           root: workspace
           paths:
@@ -93,8 +96,6 @@ commands:
         type: string
       resourceGroupName:
         type: string
-      commandParameters:
-        type: env_var_name
       timeout:
         type: string
         default: "60"
@@ -104,7 +105,6 @@ commands:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - run: cat /tmp/workspace/deploy.json
       - run:
           name: SSM Send Command
           command: >
@@ -112,7 +112,7 @@ commands:
             --document-name "<< parameters.documentName >>"
             --document-version "<< parameters.documentVersion >>"
             --targets '[{"Key":"resource-groups:Name","Values":["<< parameters.resourceGroupName >>"]}]'
-            --parameters '<< parameters.commandParameters >>'
+            --parameters '$(cat /tmp/workspace/deploy.json)'
             --timeout-seconds << parameters.timeout >>
             --max-concurrency "<< parameters.concurrency >>"
             --max-errors "0"
@@ -165,8 +165,7 @@ jobs:
   conf_deploy:
     executor: utility
     steps:
-      - generate_deploy_params:
-          apiToken: $ARTIFACTORY_API_TOKEN
+      - generate_deploy_params
   deploy:
     executor: aws-cli/default
     steps:
@@ -178,7 +177,6 @@ jobs:
           documentName: "DeployWildflyDomainMode"
           documentVersion: "13"
           resourceGroupName: "DevDomainControllers"
-          commandParameters: "COMMAND_PARAMETERS"
 
 workflows:
   version: 2.1
