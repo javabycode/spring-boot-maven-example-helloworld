@@ -82,7 +82,7 @@ commands:
             }
             END_HEREDOC
             )
-      - run: echo "$COMMAND_PARAMETERS" | jq -c > /tmp/workspace/deploy.json
+            echo "$COMMAND_PARAMETERS" | jq -c > /tmp/workspace/deploy.json
       - persist_to_workspace:
           root: workspace
           paths:
@@ -107,12 +107,13 @@ commands:
           at: /tmp/workspace
       - run:
           name: SSM Send Command
-          command: >
+          command: |
+            COMMAND_PARAMETERS=$(cat /tmp/workspace/deploy.json)
             aws ssm send-command
             --document-name "<< parameters.documentName >>"
             --document-version "<< parameters.documentVersion >>"
             --targets '[{"Key":"resource-groups:Name","Values":["<< parameters.resourceGroupName >>"]}]'
-            --parameters '$(cat /tmp/workspace/deploy.json)'
+            --parameters $COMMAND_PARAMETERS
             --timeout-seconds << parameters.timeout >>
             --max-concurrency "<< parameters.concurrency >>"
             --max-errors "0"
