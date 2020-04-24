@@ -216,11 +216,11 @@ workflows:
       - test:
           requires:
             - build
-      - deploy_dev:
+      - approve_deploy_dev:
           type: approval
           requires:
             - test
-      - deploy_test:
+      - approve_deploy_test:
           type: approval
           requires:
             - test
@@ -231,7 +231,7 @@ workflows:
           domainControllerHost: "dc-dev.mytutor.co.uk"
           serverGroupName: "main-server-group"
           requires:
-            - deploy_dev
+            - approve_deploy_dev
       - conf_deploy:
           name: conf_deploy_test
           context: test
@@ -239,4 +239,16 @@ workflows:
           domainControllerHost: "dc-test.mytutor.co.uk"
           serverGroupName: "test2"
           requires:
-            - deploy_test
+            - approve_deploy_test
+      - deploy:
+          name: deploy_dev
+          context: aws
+          resourceGroupName: "DevDomainControllers"
+          requires:
+            - conf_deploy_dev
+      - deploy:
+          name: deploy_test
+          context: aws
+          resourceGroupName: "TestDomainControllers"
+          requires:
+            - conf_deploy_test
