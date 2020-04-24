@@ -51,7 +51,7 @@ jobs:
   deploy_test:
     executor: aws-cli/default
     steps:
-      - awscli/install
+      - aws-cli/install
       - run: aws --version
       - run: aws ec2 describe-instances
 
