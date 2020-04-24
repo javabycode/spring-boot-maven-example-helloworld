@@ -108,7 +108,6 @@ commands:
       - run:
           name: SSM Send Command
           command: |
-            COMMAND_PARAMETERS=$(cat /tmp/workspace/deploy.json)
             aws ssm send-command \
             --document-name "<< parameters.documentName >>" \
             --document-version "<< parameters.documentVersion >>" \
@@ -116,7 +115,7 @@ commands:
             --parameters "$(cat /tmp/workspace/deploy.json)" \
             --timeout-seconds << parameters.timeout >> \
             --max-concurrency "<< parameters.concurrency >>" \
-            --max-errors "0"
+            --max-errors "0" > /dev/null
 
 jobs:
   build:
