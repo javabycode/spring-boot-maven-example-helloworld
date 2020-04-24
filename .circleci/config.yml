@@ -11,12 +11,24 @@ executors:
     working_directory: /tmp
 
 commands:
-  generate_deploy_params:
+  conf_ssm_deploy_wildfly:
     description: "Generate parameters for the DeployWildflyDomainMode SSM document"
     parameters:
-      apiToken:
-        type: env_var_name
-        default: ARTIFACTORY_API_TOKEN
+      repository:
+        type: "string"
+      package:
+        type: "string"
+      artifact:
+        type: "string"
+      version:
+        type: "string"
+      ext:
+        type: "enum"
+        enum: ["jar", "war"]
+      domainControllerHost:
+        type: "string"
+      serverGroupName:
+        type: "string"
     steps:
       - jq/install
       - run: mkdir -p workspace
@@ -29,19 +41,19 @@ commands:
                 "na"
               ],
               "artifactName": [
-                "primefaces-6.2.10.jar"
+                "<< parameters.artifact >>-<< parameters.version >>.<< parameters.ext >>"
               ],
               "artifactPackage": [
-                "org.primefaces.primefaces"
+                "<< parameters.package >>"
               ],
               "artifactRepoAuthHeader": [
-                "X-JFrog-Art-Api: $<< parameters.apiToken >>"
+                "X-JFrog-Art-Api: $ARTIFACTORY_API_TOKEN"
               ],
               "artifactRepoUrl": [
-                "mytutor.jfrog.io/artifactory/libs-release-local"
+                "<< parameters.repository >>"
               ],
               "artifactVersion": [
-                "6.2.10"
+                "<< parameters.version >>"
               ],
               "autoscalingGroupName": [
                 "na"
@@ -53,13 +65,13 @@ commands:
                 "/opt"
               ],
               "deployName": [
-                "primefaces.jar"
+                "<< parameters.artifact >>.<< parameters.ext >>"
               ],
               "deployVersion": [
-                "6.2.10"
+                "<< parameters.version >>"
               ],
               "domainControllerHost": [
-                "dc-spf-1230.mytutor.co.uk"
+                "<< parameters.domainControllerHost >>"
               ],
               "executionTimeout": [
                 "3600"
@@ -71,7 +83,7 @@ commands:
                 "/home/bamboo/mercury1-safe-ssh/ssh/scripts"
               ],
               "targetServerGroup": [
-                "main-server-group"
+                "<< parameters.serverGroupName >>"
               ],
               "wildflyDir": [
                 "/applications/mtw"
@@ -88,7 +100,7 @@ commands:
           paths:
             - deploy.json
   ssm_send_command:
-    description: "Run an remote script against a target resource group"
+    description: "Execute command against a target resource group"
     parameters:
       documentName:
         type: string
@@ -164,10 +176,28 @@ jobs:
           path: /tmp/artifacts
   conf_deploy:
     executor: utility
+    parameters:
+      repository:
+        type: "string"
+      domainControllerHost:
+        type: "string"
+      serverGroupName:
+        type: "string"
     steps:
-      - generate_deploy_params
+#      TODO: grab all the maven goodies
+      - conf_ssm_deploy_wildfly:
+          repository: << parameters.repository >>
+          package: "org.primefaces.primefaces"
+          artifact: "primefaces"
+          version: "6.2.10"
+          ext: "war"
+          domainControllerHost: << parameters.domainControllerHost >>
+          serverGroupName: << parameters.serverGroupName >>
   deploy:
     executor: aws-cli/default
+    parameters:
+      resourceGroupName:
+        type: string
     steps:
       - aws-cli/install
       - aws-cli/setup:
@@ -176,7 +206,7 @@ jobs:
       - ssm_send_command:
           documentName: "DeployWildflyDomainMode"
           documentVersion: "13"
-          resourceGroupName: "DevDomainControllers"
+          resourceGroupName: << parameters.resourceGroupName >>
 
 workflows:
   version: 2.1
@@ -186,15 +216,27 @@ workflows:
       - test:
           requires:
             - build
-      - hold:
+      - deploy_dev:
+          type: approval
+          requires:
+            - test
+      - deploy_test:
           type: approval
           requires:
             - test
       - conf_deploy:
-          context: artifactory
+          name: conf_deploy_dev
+          context: dev
+          repository: "mytutor.jfrog.io/artifactory/libs-release-local"
+          domainControllerHost: "dc-dev.mytutor.co.uk"
+          serverGroupName: "main-server-group"
           requires:
-            - hold
-      - deploy:
-          context: aws
+            - deploy_dev
+      - conf_deploy:
+          name: conf_deploy_test
+          context: test
+          repository: "mytutor.jfrog.io/artifactory/libs-release-local"
+          domainControllerHost: "dc-test.mytutor.co.uk"
+          serverGroupName: "test2"
           requires:
-            - conf_deploy
+            - deploy_test
