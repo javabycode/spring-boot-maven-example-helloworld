@@ -52,8 +52,8 @@ jobs:
     executor: aws-cli/default
     steps:
       - aws-cli/install
-      - aws-cli/setup
-          region: eu-west-1
+      - aws-cli/setup:
+          region: "eu-west-1"
       - run: aws --version
       - run: aws ec2 describe-instances
 
