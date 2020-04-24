@@ -53,7 +53,7 @@ jobs:
     steps:
       - aws-cli/install
       - aws-cli/setup:
-          aws-region: "eu-west-1"
+          aws-region: eu-west-1
       - run: aws --version
       - run: aws ec2 describe-instances
 
