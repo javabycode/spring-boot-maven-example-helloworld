@@ -80,7 +80,7 @@ commands:
             }
             END_HEREDOC
             )
-            echo "$COMMAND_PARAMETERS" > /tmp/deploy.json
+            echo "$COMMAND_PARAMETERS" > /tmp/workspace/deploy.json
       - persist_to_workspace:
           root: workspace
           paths:
