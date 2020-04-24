@@ -53,7 +53,7 @@ jobs:
     steps:
       - aws-cli/install
       - run: aws --version
-      - run: aws ec2 describe-instances
+      - run: aws ec2 describe-instances --region eu-west-1
 
 workflows:
   version: 2.1
