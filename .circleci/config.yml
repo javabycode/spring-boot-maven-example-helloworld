@@ -104,7 +104,7 @@ commands:
         default: "1"
     steps:
       - attach_workspace:
-            at: /tmp/workspace
+          at: /tmp/workspace
       - run: cat /tmp/workspace/deploy.json
       - run:
           name: SSM Send Command
