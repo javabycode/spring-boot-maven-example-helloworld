@@ -194,9 +194,11 @@ workflows:
             - test
       - conf_deploy:
           context: artifactory
+          requires:
+            - hold
       - deploy:
           context: aws
           requires:
-            - hold
+            - conf_deploy
 
 
