@@ -109,13 +109,13 @@ commands:
           name: SSM Send Command
           command: |
             COMMAND_PARAMETERS=$(cat /tmp/workspace/deploy.json)
-            aws ssm send-command
-            --document-name "<< parameters.documentName >>"
-            --document-version "<< parameters.documentVersion >>"
-            --targets '[{"Key":"resource-groups:Name","Values":["<< parameters.resourceGroupName >>"]}]'
-            --parameters $COMMAND_PARAMETERS
-            --timeout-seconds << parameters.timeout >>
-            --max-concurrency "<< parameters.concurrency >>"
+            aws ssm send-command \
+            --document-name "<< parameters.documentName >>" \
+            --document-version "<< parameters.documentVersion >>" \
+            --targets '[{"Key":"resource-groups:Name","Values":["<< parameters.resourceGroupName >>"]}]' \
+            --parameters $COMMAND_PARAMETERS \
+            --timeout-seconds << parameters.timeout >> \
+            --max-concurrency "<< parameters.concurrency >>" \
             --max-errors "0"
 
 jobs:
