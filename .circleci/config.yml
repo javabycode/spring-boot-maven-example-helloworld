@@ -3,6 +3,121 @@ version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@1.0.0
 
+executors:
+  utility:
+    docker:
+      - image: buildpack-deps:jessie
+    working_directory: /tmp
+
+commands:
+  generate_deploy_params:
+    description: "Generate parameters for the DeployWildflyDomainMode SSM document"
+    parameters:
+      apiToken:
+        type: env_var_name
+        default: ARTIFACTORY_API_TOKEN
+    steps:
+      - run: mkdir -p workspace
+      - run:
+          name: Generate Command Parameters
+          command: |
+            COMMAND_PARAMETERS=$(cat \<<END_HEREDOC
+            {
+              "S3Bucket": [
+                "na"
+              ],
+              "artifactName": [
+                "primefaces-6.2.10.jar"
+              ],
+              "artifactPackage": [
+                "org.primefaces.primefaces"
+              ],
+              "artifactRepoAuthHeader": [
+                "X-JFrog-Art-Api: << parameters.apiToken >>"
+              ],
+              "artifactRepoUrl": [
+                "mytutor.jfrog.io/artifactory/libs-release-local"
+              ],
+              "artifactVersion": [
+                "6.2.10"
+              ],
+              "autoscalingGroupName": [
+                "na"
+              ],
+              "debug": [
+                "true"
+              ],
+              "deployDir": [
+                "/opt"
+              ],
+              "deployName": [
+                "primefaces.jar"
+              ],
+              "deployVersion": [
+                "6.2.10"
+              ],
+              "domainControllerHost": [
+                "dc-spf-1230.mytutor.co.uk"
+              ],
+              "executionTimeout": [
+                "3600"
+              ],
+              "notifyNewRelic": [
+                "na"
+              ],
+              "scriptDir": [
+                "/home/bamboo/mercury1-safe-ssh/ssh/scripts"
+              ],
+              "targetServerGroup": [
+                "main-server-group"
+              ],
+              "wildflyDir": [
+                "/applications/mtw"
+              ],
+              "workingDirectory": [
+                ""
+              ]
+            }
+            END_HEREDOC
+            )
+            echo "$COMMAND_PARAMETERS" > /tmp/deploy.json
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - deploy.json
+  ssm_send_command:
+    description: "Run an remote script against a target resource group"
+    parameters:
+      documentName:
+        type: string
+      documentVersion:
+        type: string
+      resourceGroupName:
+        type: string
+      commandParameters:
+        type: env_var_name
+      timeout:
+        type: string
+        default: "60"
+      concurrency:
+        type: string
+        default: "1"
+    steps:
+      - attach_workspace:
+            at: /tmp/workspace
+      - run: cat /tmp/workspace/deploy.json
+      - run:
+          name: SSM Send Command
+          command: >
+            aws ssm send-command \
+            --document-name "<< parameters.documentName >>" \
+            --document-version "<< parameters.documentVersion >>" \
+            --targets '[{"Key":"resource-groups:Name","Values":["<< parameters.resourceGroupName >>"]}]' \
+            --parameters '<< parameters.commandParameters >>' \
+            --timeout-seconds << parameters.timeout >> \
+            --max-concurrency "<< parameters.concurrency >>" \
+            --max-errors "0"
+
 jobs:
   build:
     docker:
@@ -48,14 +163,22 @@ jobs:
           destination: example-artifact.jar
       - store_artifacts:
           path: /tmp/artifacts
-  deploy_test:
+  conf_deploy:
+    executor: utility
+    steps:
+      - generate_deploy_params
+  deploy:
     executor: aws-cli/default
     steps:
       - aws-cli/install
       - aws-cli/setup:
           aws-region: AWS_REGION
       - run: aws --version
-      - run: aws ec2 describe-instances
+      - ssm_send_command:
+          documentName: "DeployWildflyDomainMode"
+          documentVersion: "13"
+          resourceGroupName: "DevDomainControllers"
+          commandParameters: "COMMAND_PARAMETERS"
 
 workflows:
   version: 2.1
@@ -69,7 +192,9 @@ workflows:
           type: approval
           requires:
             - test
-      - deploy_test:
+      - conf_deploy:
+          context: artifactory
+      - deploy:
           context: aws
           requires:
             - hold
