@@ -14,8 +14,7 @@ commands:
     description: "Generate parameters for the DeployWildflyDomainMode SSM document"
     parameters:
       apiToken:
-        type: env_var_name
-        default: ARTIFACTORY_API_TOKEN
+        type: string
     steps:
       - run: mkdir -p workspace
       - run:
@@ -109,13 +108,13 @@ commands:
       - run:
           name: SSM Send Command
           command: >
-            aws ssm send-command \
-            --document-name "<< parameters.documentName >>" \
-            --document-version "<< parameters.documentVersion >>" \
-            --targets '[{"Key":"resource-groups:Name","Values":["<< parameters.resourceGroupName >>"]}]' \
-            --parameters '<< parameters.commandParameters >>' \
-            --timeout-seconds << parameters.timeout >> \
-            --max-concurrency "<< parameters.concurrency >>" \
+            aws ssm send-command
+            --document-name "<< parameters.documentName >>"
+            --document-version "<< parameters.documentVersion >>"
+            --targets '[{"Key":"resource-groups:Name","Values":["<< parameters.resourceGroupName >>"]}]'
+            --parameters '<< parameters.commandParameters >>'
+            --timeout-seconds << parameters.timeout >>
+            --max-concurrency "<< parameters.concurrency >>"
             --max-errors "0"
 
 jobs:
@@ -166,7 +165,8 @@ jobs:
   conf_deploy:
     executor: utility
     steps:
-      - generate_deploy_params
+      - generate_deploy_params:
+          apiToken: $ARTIFACTORY_API_TOKEN
   deploy:
     executor: aws-cli/default
     steps:
