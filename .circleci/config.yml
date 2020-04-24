@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  aws-cli: circleci/aws-cli@1.0.0
+
 jobs:
   build:
     docker:
@@ -27,7 +30,7 @@ jobs:
           command: mvn verify --settings 'pom.xml'
       - store_test_results:
           path: target/surefire-reports
-  deploy:
+  publish:
     docker:
       - image: circleci/openjdk:8-jdk-node
     steps:
@@ -45,20 +48,25 @@ jobs:
           destination: example-artifact.jar
       - store_artifacts:
           path: /tmp/artifacts
+  deploy_test:
+    executor: aws-cli/default
+    steps:
+      - run: aws ec2 describe-instances
 
 workflows:
   version: 2.1
-  maven_test:
+  features:
     jobs:
       - build
+      - test:
+          requires:
+            - build
       - hold:
           type: approval
           requires:
-            - build
-      - test:
+            - test
+      - deploy_test:
           requires:
             - hold
-      - deploy:
-          requires:
-            - build
+
 
