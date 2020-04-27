@@ -213,7 +213,7 @@ workflows:
   version: 2.1
   features:
     jobs:
-      - build
+      - build:
           context: artifactory
       - test:
           context: artifactory
