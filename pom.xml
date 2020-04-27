@@ -21,6 +21,9 @@
         <snapshotRepository>
             <id>snapshots</id>
         </snapshotRepository>
+        <repository>
+            <id>central</id>
+        </repository>
     </distributionManagement>
 
     <dependencies>
