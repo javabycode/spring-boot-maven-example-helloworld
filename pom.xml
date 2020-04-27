@@ -17,6 +17,12 @@
         <version.number>${git.commit.time}.${git.commit.id.abbrev}</version.number>
     </properties>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>snapshots</id>
+        </snapshotRepository>
+    </distributionManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -166,7 +166,7 @@ jobs:
           key: v1-dependencies-{{ checksum "./pom.xml" }}
       - run:
           name: Maven Deploy
-          command: mvn deploy -s .circleci/settings.xml
+          command: mvn deploy -Dmaven.test.skip=true -s .circleci/settings.xml
   publish:
     docker:
       - image: circleci/openjdk:8-jdk-node
