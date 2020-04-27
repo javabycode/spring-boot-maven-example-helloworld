@@ -157,6 +157,16 @@ jobs:
           command: mvn verify -s .circleci/settings.xml
       - store_test_results:
           path: target/surefire-reports
+  maven_deploy:
+    docker:
+      - image: circleci/openjdk:8-jdk-node
+      steps:
+        - checkout
+        - restore_cache:
+            key: v1-dependencies-{{ checksum "./pom.xml" }}
+        - run:
+            name: Maven Deploy
+            command: mvn deploy -s .circleci/settings.xml
   publish:
     docker:
       - image: circleci/openjdk:8-jdk-node
@@ -219,6 +229,10 @@ workflows:
           context: artifactory
           requires:
             - build
+      - maven_deploy:
+          context: artifactory
+            requires:
+              - test
       - approve_deploy_dev:
           type: approval
           requires:
