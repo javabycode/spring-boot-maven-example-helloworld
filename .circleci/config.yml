@@ -231,8 +231,8 @@ workflows:
             - build
       - maven_deploy:
           context: artifactory
-            requires:
-              - test
+          requires:
+            - test
       - approve_deploy_dev:
           type: approval
           requires:
