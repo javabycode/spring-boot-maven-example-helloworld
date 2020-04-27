@@ -160,13 +160,13 @@ jobs:
   maven_deploy:
     docker:
       - image: circleci/openjdk:8-jdk-node
-      steps:
-        - checkout
-        - restore_cache:
-            key: v1-dependencies-{{ checksum "./pom.xml" }}
-        - run:
-            name: Maven Deploy
-            command: mvn deploy -s .circleci/settings.xml
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependencies-{{ checksum "./pom.xml" }}
+      - run:
+          name: Maven Deploy
+          command: mvn deploy -s .circleci/settings.xml
   publish:
     docker:
       - image: circleci/openjdk:8-jdk-node
