@@ -133,13 +133,14 @@ jobs:
   build:
     docker:
       - image: circleci/openjdk:8-jdk-node
+
     steps:
       - checkout
       - restore_cache:
           key: v1-dependencies-{{ checksum "./pom.xml" }}
       - run:
           name: Install Dependencies
-          command: mvn dependency:go-offline --settings 'pom.xml'
+          command: mvn dependency:go-offline -s .circleci.settings.xml
       - save_cache:
           paths:
             - ~/.m2
@@ -153,7 +154,7 @@ jobs:
           key: v1-dependencies-{{ checksum "./pom.xml" }}
       - run:
           name: Run Tests
-          command: mvn verify --settings 'pom.xml'
+          command: mvn verify -s .circleci.settings.xml
       - store_test_results:
           path: target/surefire-reports
   publish:
@@ -165,7 +166,7 @@ jobs:
           key: v1-dependencies-{{ checksum "./pom.xml" }}
       - run:
           name: Build Artifact
-          command: mvn package
+          command: mvn package -s .circleci.settings.xml
       - run:
           name: Prepare artifacts folder
           command: mkdir /tmp/artifacts
@@ -213,7 +214,9 @@ workflows:
   features:
     jobs:
       - build
+          context: artifactory
       - test:
+          context: artifactory
           requires:
             - build
       - approve_deploy_dev:
