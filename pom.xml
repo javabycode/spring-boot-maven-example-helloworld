@@ -20,9 +20,13 @@
     <distributionManagement>
         <snapshotRepository>
             <id>snapshots</id>
+            <name>libs-snapshot</name>
+            <url>https://mytutor.jfrog.io/artifactory/libs-snapshot</url>
         </snapshotRepository>
         <repository>
             <id>central</id>
+            <name>libs-release</name>
+            <url>https://mytutor.jfrog.io/artifactory/libs-release</url>
         </repository>
     </distributionManagement>
 
