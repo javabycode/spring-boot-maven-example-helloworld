@@ -140,7 +140,7 @@ jobs:
           key: v1-dependencies-{{ checksum "./pom.xml" }}
       - run:
           name: Install Dependencies
-          command: mvn dependency:go-offline -s .circleci.settings.xml
+          command: mvn dependency:go-offline -s .circleci/settings.xml
       - save_cache:
           paths:
             - ~/.m2
@@ -154,7 +154,7 @@ jobs:
           key: v1-dependencies-{{ checksum "./pom.xml" }}
       - run:
           name: Run Tests
-          command: mvn verify -s .circleci.settings.xml
+          command: mvn verify -s .circleci/settings.xml
       - store_test_results:
           path: target/surefire-reports
   publish:
@@ -166,7 +166,7 @@ jobs:
           key: v1-dependencies-{{ checksum "./pom.xml" }}
       - run:
           name: Build Artifact
-          command: mvn package -s .circleci.settings.xml
+          command: mvn package -s .circleci/settings.xml
       - run:
           name: Prepare artifacts folder
           command: mkdir /tmp/artifacts
