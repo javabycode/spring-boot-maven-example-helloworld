@@ -4,6 +4,8 @@ Guide
 
 This is a part of the tutorial http://javabycode.com/spring-framework-tutorial/spring-boot-tutorial/spring-boot-maven-example-hello-world.html
 
+Welcome to the Hexaware Technologies
+
 What you'll need
 
     JDK 1.7 or later
